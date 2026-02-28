@@ -1,0 +1,32 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Virtualenv
+.venv/
+venv/
+
+# Git
+.git/
+.gitignore
+
+# Env / secrets
+.env
+
+# Node
+node_modules/
+
+# IDE
+.idea/
+.vscode/
+
+# Docker
+Dockerfile
+docker-compose.yml
+
+# Tests / cache
+tests/
+.cache/
+.pytest_cache/
