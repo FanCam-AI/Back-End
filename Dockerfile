@@ -19,7 +19,6 @@ RUN pip install --upgrade pip && pip install -r requirements.txt
 # app
 COPY . /app
 
-EXPOSE 8000
+EXPOSE 8080
 
-CMD ["gunicorn", "main:app", "--bind", "0.0.0.0:8000", "--worker-class", "uvicorn.workers.UvicornWorker", "--access-logfile", "-", "--log-level", "info"]
-
+CMD ["sh", "-c", "gunicorn main:app --bind 0.0.0.0:$PORT --worker-class uvicorn.workers.UvicornWorker"]
