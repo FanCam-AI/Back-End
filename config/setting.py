@@ -40,6 +40,7 @@ class Settings(BaseSettings):
     FERNET_KEY: str
     RUNPOD_API_KEY: str
     RUNPOD_URL: str
+    CLOUD_RUN_URL: str
 
     # pydantic v2 config
     model_config = SettingsConfigDict(
