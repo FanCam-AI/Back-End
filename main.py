@@ -3,6 +3,7 @@ from starlette.middleware.cors import CORSMiddleware
 from domain import router
 from starlette.middleware.sessions import SessionMiddleware
 from config import settings
+from starlette.middleware.trustedhost import TrustedHostMiddleware
 app = FastAPI()
 
 origins = [
@@ -27,5 +28,9 @@ app.add_middleware(
 )
 
 
+app.add_middleware(
+    TrustedHostMiddleware,
+    allowed_hosts=["fancamai.com", "*.fancamai.com"]
+)
 
 app.include_router(router)
