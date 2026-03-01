@@ -4,7 +4,7 @@ from domain import router
 from starlette.middleware.sessions import SessionMiddleware
 from config import settings
 from starlette.middleware.trustedhost import TrustedHostMiddleware
-app = FastAPI()
+app = FastAPI(docs_url=None)
 
 origins = [
     "https://fancamai.com",
