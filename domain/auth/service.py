@@ -28,7 +28,7 @@ async def apple_callback_service(db: Session, code, expected_nonce):
     apple_refresh_token = token.get("refresh_token")
 
     user_oauth = await oauth_apple.apple.parse_id_token(token, nonce=expected_nonce)
-    username, email, user = await get_user_info(db, user_oauth)
+    username, email, user = get_user_info(db, user_oauth)
     if not user:
         user = crud.create_user(db, schema.UserCreate(
             username=username,
@@ -77,7 +77,7 @@ async def google_callback_service(db: Session, id_token, nonce):
     return user
 
 
-async def get_user_info(db: Session, user_oauth):
+def get_user_info(db: Session, user_oauth):
     user_info = dict(user_oauth)
     email = user_info.get("email")
     if email is None:
