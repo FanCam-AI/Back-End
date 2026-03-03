@@ -4,7 +4,7 @@ from starlette.middleware.sessions import SessionMiddleware
 from config import settings
 from domain import auth_router, user_router, share_router, result_router
 from starlette.middleware.trustedhost import TrustedHostMiddleware
-app = FastAPI()
+app = FastAPI(docs_url=None, redoc_url=None, openapi_url=None)
 
 origins = [
     "https://fancamai.com",
@@ -30,7 +30,7 @@ app.add_middleware(
 
 app.add_middleware(
     TrustedHostMiddleware,
-    allowed_hosts=["fancamai.com", "*.fancamai.com", settings.CLOUD_RUN_URL, "fancamai-backend-551954370080.europe-west1.run.app"]
+    allowed_hosts=["fancamai.com", "*.fancamai.com", settings.CLOUD_RUN_URL]
 )
 
 app.include_router(auth_router)
