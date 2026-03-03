@@ -120,7 +120,7 @@ async def refresh_access_token(
     if not old_refresh_token:
         raise HTTPException(status_code=401, detail="Refresh token missing")
 
-    access_token, refresh_token, user = service.refresh_user_token(db, old_refresh_token)
+    access_token, refresh_token, user = await service.refresh_user_token(db, old_refresh_token)
 
     response_data = {
         "username": user.username,
