@@ -11,7 +11,7 @@ from . import service, schema
 share_router = APIRouter(prefix="/share")
 
 
-@share_router.get("/result/result_list", response_model=list[schema.ResultOutput])
+@share_router.get("/result_list", response_model=list[schema.ResultOutput])
 async def result_list(request: Request, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     _result_list = service.get_result_list_service(db, current_user.id)
     return _result_list
@@ -36,7 +36,7 @@ async def check_password(public_id: str, password: str = Form(...), db: Session 
     return response
 
 
-@share_router.post("/result/set_all_private")
+@share_router.post("/set_all_private")
 async def set_all_private(
     password: str = Form(...),
     db: Session = Depends(get_db),
@@ -46,7 +46,7 @@ async def set_all_private(
    return response
 
 
-@share_router.post("/result/set_all_public")
+@share_router.post("/set_all_public")
 async def set_all_public(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
