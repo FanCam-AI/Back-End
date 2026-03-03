@@ -1,4 +1,4 @@
-import schema
+from . import schema
 from sqlalchemy.orm import Session
 from models import User
 
