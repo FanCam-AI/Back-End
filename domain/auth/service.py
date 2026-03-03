@@ -1,5 +1,5 @@
 from infra import client_secret, oauth_google, oauth_apple, redis_client
-import crud, schema
+from . import crud, schema
 from config import settings
 from sqlalchemy.orm import Session
 from fastapi import HTTPException

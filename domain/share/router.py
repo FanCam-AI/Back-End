@@ -5,7 +5,7 @@ from database import get_db
 from models import User
 from fastapi import Request, Form
 from domain.token import get_current_user
-import service, schema
+from . import service, schema
 
 
 share_router = APIRouter(prefix="/share")

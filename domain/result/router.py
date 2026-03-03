@@ -6,7 +6,7 @@ from models import User
 from fastapi import HTTPException, Form
 from typing import Optional
 from domain.token import get_current_user
-import service
+from . import service
 
 
 result_router = APIRouter(prefix="/result")

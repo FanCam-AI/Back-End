@@ -1,7 +1,7 @@
 from sqlalchemy.orm import Session
 import httpx
 from sqlalchemy.exc import SQLAlchemyError
-import crud
+from . import crud
 from config import settings
 from infra import r2_client, redis_client
 from cryptography.fernet import Fernet

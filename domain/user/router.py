@@ -6,7 +6,7 @@ from fastapi import HTTPException, Form
 from sqlalchemy.exc import SQLAlchemyError
 from config import settings
 from domain.token import get_current_user
-import service, schema
+from . import service, schema
 
 user_router = APIRouter(prefix="/user")
 

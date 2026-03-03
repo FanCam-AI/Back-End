@@ -1,6 +1,5 @@
 from sqlalchemy.orm import Session
 from models import User, Result
-from config import settings, logger
 
 
 def get_user_by_id(db: Session, user_id):

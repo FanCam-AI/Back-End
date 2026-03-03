@@ -1,6 +1,6 @@
 from models import Result
 from fastapi.templating import Jinja2Templates
-import crud
+from . import crud
 from sqlalchemy.orm import Session
 from fastapi.responses import RedirectResponse
 from passlib.hash import bcrypt

@@ -5,9 +5,8 @@ from fastapi import Request, Header, HTTPException, Form
 from fastapi.responses import JSONResponse
 import os, secrets
 from config import settings
-import service
+from . import service
 from infra import oauth_google, oauth_apple
-
 
 auth_router = APIRouter(prefix="/auth")
 

@@ -1,13 +1,11 @@
-from infra import client_secret, redis_client, r2_client
+from infra import client_secret, r2_client
 from models import User
-import crud
+from . import crud
 from config import settings
 from sqlalchemy.orm import Session
 from fastapi import HTTPException
 import httpx
-from authlib.jose import jwt
 from config import logger
-from authlib.jose import JoseError
 from sqlalchemy.exc import SQLAlchemyError
 from botocore.exceptions import ClientError
 

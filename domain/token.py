@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 from datetime import timedelta, datetime
 from authlib.jose import jwt
 from database import get_db
-import user.crud as crud
+from .user import crud
 from models import User
 from authlib.jose import JoseError
 from fastapi import Request, Header, HTTPException
