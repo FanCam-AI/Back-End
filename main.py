@@ -30,7 +30,7 @@ app.add_middleware(
 
 app.add_middleware(
     TrustedHostMiddleware,
-    allowed_hosts=["fancamai.com", "*.fancamai.com", settings.CLOUD_RUN_URL]
+    allowed_hosts=["fancamai.com", "*.fancamai.com", settings.CLOUD_RUN_URL, "fancamai-backend-551954370080.europe-west1.run.app"]
 )
 
 app.include_router(auth_router)
