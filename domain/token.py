@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 from datetime import timedelta, datetime
 from authlib.jose import jwt
 from database import get_db
-from domain import crud
+import user.crud as crud
 from models import User
 from authlib.jose import JoseError
 from fastapi import Request, Header, HTTPException
@@ -35,7 +35,7 @@ def _resolve_user_and_token(
     except JoseError:
         raise HTTPException(status_code=401, detail="Invalid token")
 
-    user = crud.get_user(db, user_id=user_id)
+    user = crud.get_user_by_id(db, user_id=user_id)
     if not user:
         raise HTTPException(status_code=401, detail="User not found")
 
@@ -63,6 +63,32 @@ def get_current_user(
 
 def hash_token(token: str) -> str:
     return hashlib.sha256(token.encode()).hexdigest()
+
+
+
+async def create_result_token(user: User):
+    header = {
+        "alg": settings.ALGORITHM,
+        "typ": "JWT"
+    }
+
+    access_payload = {
+        "sub": user.id,
+        "type": "result",
+        "iat": int(datetime.utcnow().timestamp()),
+        "exp": int((datetime.utcnow() + timedelta(
+            minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES
+        )).timestamp())
+    }
+
+    result_token = jwt.encode(
+        header,
+        access_payload,
+        settings.SECRET_KEY
+    ).decode("utf-8")
+
+    return result_token
+
 
 
 async def create_refresh_token(user: User):
