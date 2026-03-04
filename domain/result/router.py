@@ -103,10 +103,10 @@ async def init_video_upload(
     parsed = urlparse(url)
     query = parse_qs(parsed.query)
 
+    logger.warning(f"presigned_url           = {url}")
     logger.warning("R2 PRESIGN DEBUG =========================")
     logger.warning(f"filename      = {filename}")
     logger.warning(f"content_type  = {repr(content_type)}")
-    logger.warning(f"key           = {key}")
     logger.warning(f"signedHeaders = {query.get('X-Amz-SignedHeaders')}")
     logger.warning(f"expires       = {query.get('X-Amz-Expires')}")
     logger.warning(f"algorithm     = {query.get('X-Amz-Algorithm')}")
