@@ -92,16 +92,18 @@ async def init_video_upload(
         ClientMethod="put_object",
         Params={
             "Bucket": settings.R2_BUCKET,
-            "ContentType": content_type,
+            "ContentType": "video/quicktime",
             "Key": key,
         },
         ExpiresIn=600,  # 10분
     )
 
+    logger.info(f"Generated content_type: {content_type} for filename: {filename}")
+
     return {
         "key": key,
         "url": url,
-        "content_type": content_type
+        "contentType": content_type
     }
 
 @result_router.post("/init_image_upload")
