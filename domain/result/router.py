@@ -77,28 +77,30 @@ async def init_video_upload(
     filename: str = Form(...),
     current_user: User = Depends(get_current_user),
 ):
-    key = f"videos/{current_user.id}/{uuid.uuid4()}/{filename}"
-    _, ext = os.path.splitext(filename)
-    ext = ext.lower()
+    try:
+        key = f"videos/{current_user.id}/{uuid.uuid4()}/{filename}"
+        _, ext = os.path.splitext(filename)
+        ext = ext.lower()
 
-    if ext == ".mov":
-        content_type = "video/quicktime"
-    elif ext == ".mp4":
-        content_type = "video/mp4"
-    else:
-        content_type = "application/octet-stream"
+        if ext == ".mov":
+            content_type = "video/quicktime"
+        elif ext == ".mp4":
+            content_type = "video/mp4"
+        else:
+            content_type = "application/octet-stream"
 
-    url = r2_client.generate_presigned_url(
-        ClientMethod="put_object",
-        Params={
-            "Bucket": settings.R2_BUCKET,
-            "ContentType": content_type,
-            "Key": key,
-        },
-        ExpiresIn=600,  # 10분
-    )
+        url = r2_client.generate_presigned_url(
+            ClientMethod="put_object",
+            Params={
+                "Bucket": settings.R2_BUCKET,
+                "ContentType": content_type,
+                "Key": key,
+            },
+            ExpiresIn=600,  # 10분
+        )
 
-    logger.info("R2_VIDEO_PRESIGN key=%s url=%s", key, url)
+    except HTTPException as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
     return {
         "key": key,
@@ -110,18 +112,19 @@ async def init_image_upload(
     filename: str = Form(...),
     current_user: User = Depends(get_current_user),
 ):
-    key = f"images/{current_user.id}/{uuid.uuid4()}/{filename}"
+    try:
+        key = f"images/{current_user.id}/{uuid.uuid4()}/{filename}"
 
-    url = r2_client.generate_presigned_url(
-        ClientMethod="put_object",
-        Params={
-            "Bucket": settings.R2_BUCKET,
-            "Key": key,
-        },
-        ExpiresIn=600,
-    )
-
-    logger.info("R2_IMAGE_PRESIGN key=%s url=%s", key, url)
+        url = r2_client.generate_presigned_url(
+            ClientMethod="put_object",
+            Params={
+                "Bucket": settings.R2_BUCKET,
+                "Key": key,
+            },
+            ExpiresIn=600,
+        )
+    except Exception as e:
+        raise HTTPException(status_code=404, detail=str(e))
 
     return {
         "key": key,
