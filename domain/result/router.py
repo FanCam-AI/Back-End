@@ -8,7 +8,7 @@ from typing import Optional
 from domain.token import get_current_user
 from . import service
 from infra import r2_client
-from config import settings
+from config import settings, logger
 import uuid, os
 
 result_router = APIRouter(prefix="/result")
@@ -98,6 +98,8 @@ async def init_video_upload(
         ExpiresIn=600,  # 10분
     )
 
+    logger.info("R2_VIDEO_PRESIGN key=%s url=%s", key, url)
+
     return {
         "key": key,
         "url": url,
@@ -118,6 +120,8 @@ async def init_image_upload(
         },
         ExpiresIn=600,
     )
+
+    logger.info("R2_IMAGE_PRESIGN key=%s url=%s", key, url)
 
     return {
         "key": key,
