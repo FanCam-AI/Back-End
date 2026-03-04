@@ -78,20 +78,30 @@ async def init_video_upload(
     current_user: User = Depends(get_current_user),
 ):
     key = f"videos/{current_user.id}/{uuid.uuid4()}/{filename}"
+    _, ext = os.path.splitext(filename)
+    ext = ext.lower()
 
-    presigned = r2_client.generate_presigned_post(
-        Bucket=settings.R2_BUCKET,
-        Key=key,
+    if ext == ".mov":
+        content_type = "video/quicktime"
+    elif ext == ".mp4":
+        content_type = "video/mp4"
+    else:
+        content_type = "application/octet-stream"
+
+    url = r2_client.generate_presigned_url(
+        ClientMethod="put_object",
+        Params={
+            "Bucket": settings.R2_BUCKET,
+            "Key": key,
+        },
         ExpiresIn=600,  # 10분
-        Conditions=[
-            ["content-length-range", 1, 2 * 1024 * 1024 * 1024],  # 최대 2GB
-        ],
     )
+
+    logger.info(f"Generated content_type: {content_type} for filename: {filename}")
 
     return {
         "key": key,
-        "url": presigned["url"],
-        "fields": presigned["fields"],
+        "url": url
     }
 
 @result_router.post("/init_image_upload")
