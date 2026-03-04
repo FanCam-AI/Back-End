@@ -101,6 +101,7 @@ async def init_video_upload(
     return {
         "key": key,
         "url": url,
+        "content_type": content_type
     }
 
 @result_router.post("/init_image_upload")
