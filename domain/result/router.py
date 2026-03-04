@@ -77,29 +77,26 @@ async def init_video_upload(
     filename: str = Form(...),
     current_user: User = Depends(get_current_user),
 ):
-    try:
-        key = f"videos/{current_user.id}/{uuid.uuid4()}/{filename}"
-        _, ext = os.path.splitext(filename)
-        ext = ext.lower()
+    key = f"videos/{current_user.id}/{uuid.uuid4()}/{filename}"
+    _, ext = os.path.splitext(filename)
+    ext = ext.lower()
 
-        if ext == ".mov":
-            content_type = "video/quicktime"
-        elif ext == ".mp4":
-            content_type = "video/mp4"
-        else:
-            content_type = "application/octet-stream"
+    if ext == ".mov":
+        content_type = "video/quicktime"
+    elif ext == ".mp4":
+        content_type = "video/mp4"
+    else:
+        content_type = "application/octet-stream"
 
-        url = r2_client.generate_presigned_url(
-            ClientMethod="put_object",
-            Params={
-                "Bucket": settings.R2_BUCKET,
-                "Key": key,
-            },
-            ExpiresIn=600,  # 10분
-        )
-
-    except HTTPException as e:
-        raise HTTPException(status_code=500, detail=str(e))
+    url = r2_client.generate_presigned_url(
+        ClientMethod="put_object",
+        Params={
+            "Bucket": settings.R2_BUCKET,
+            "ContentType": content_type,
+            "Key": key,
+        },
+        ExpiresIn=600,  # 10분
+    )
 
     return {
         "key": key,
