@@ -7,7 +7,9 @@ from fastapi import HTTPException, Form
 from typing import Optional
 from domain.token import get_current_user
 from . import service
-
+from infra import r2_client
+from config import settings
+import uuid, os
 
 result_router = APIRouter(prefix="/result")
 
@@ -75,7 +77,26 @@ async def init_video_upload(
     filename: str = Form(...),
     current_user: User = Depends(get_current_user),
 ):
-    key, url = service.init_video_upload_r2_service(filename, current_user.id)
+    key = f"videos/{current_user.id}/{uuid.uuid4()}/{filename}"
+    _, ext = os.path.splitext(filename)
+    ext = ext.lower()
+
+    if ext == ".mov":
+        content_type = "video/quicktime"
+    elif ext == ".mp4":
+        content_type = "video/mp4"
+    else:
+        content_type = "application/octet-stream"
+
+    url = r2_client.generate_presigned_url(
+        ClientMethod="put_object",
+        Params={
+            "Bucket": settings.R2_BUCKET,
+            "ContentType": content_type,
+            "Key": key,
+        },
+        ExpiresIn=600,  # 10분
+    )
 
     return {
         "key": key,
@@ -87,7 +108,16 @@ async def init_image_upload(
     filename: str = Form(...),
     current_user: User = Depends(get_current_user),
 ):
-    key, url = service.init_image_upload_r2_service(filename, current_user.id)
+    key = f"images/{current_user.id}/{uuid.uuid4()}/{filename}"
+
+    url = r2_client.generate_presigned_url(
+        ClientMethod="put_object",
+        Params={
+            "Bucket": settings.R2_BUCKET,
+            "Key": key,
+        },
+        ExpiresIn=600,
+    )
 
     return {
         "key": key,

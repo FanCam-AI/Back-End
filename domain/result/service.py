@@ -2,10 +2,9 @@ from sqlalchemy.orm import Session
 import httpx
 from sqlalchemy.exc import SQLAlchemyError
 from . import crud
-from config import settings
 from infra import r2_client, redis_client
 from cryptography.fernet import Fernet
-from config import logger
+from config import settings, logger
 from botocore.exceptions import ClientError
 from domain.token import create_result_token
 import json
