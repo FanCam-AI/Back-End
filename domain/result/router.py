@@ -103,7 +103,7 @@ async def init_video_upload(
     return {
         "key": key,
         "url": url,
-        "contentType": content_type
+        "contentType": "video/quicktime"
     }
 
 @result_router.post("/init_image_upload")
