@@ -8,6 +8,8 @@ app = FastAPI(docs_url=None, redoc_url=None, openapi_url=None)
 
 origins = [
     "https://fancamai.com",
+    "capacitor://localhost",
+    "http://localhost",
 ]
 
 app.add_middleware(
