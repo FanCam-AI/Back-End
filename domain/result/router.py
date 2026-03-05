@@ -97,8 +97,7 @@ async def init_video_upload(
             "Bucket": settings.R2_BUCKET,
             "ContentType": "video/quicktime",
             "Key": key,
-        },
-        ExpiresIn=600,  # 10분
+        }
     )
     parsed = urlparse(url)
     query = parse_qs(parsed.query)
