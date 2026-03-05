@@ -17,13 +17,7 @@ def get_result_list_service(db: Session, user_id) -> Result:
     for result in _result_list:
         if result.file_path:
             result.owner_url = f"{cdn_base_url}/{result.file_path}"
-            result.share_url = f"{base_url}/share/preview/{result.public_id}"
-
-    else:
-        for result in _result_list:
-            if result.file_path:
-                result.owner_url = f"{cdn_base_url}/{result.file_path}"
-                result.share_url = f"{cdn_base_url}/{result.file_path}"
+            result.share_url = f"{cdn_base_url}/{result.file_path}"
 
     return _result_list
 
