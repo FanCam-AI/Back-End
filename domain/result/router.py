@@ -95,7 +95,7 @@ async def init_video_upload(
         ClientMethod="put_object",
         Params={
             "Bucket": settings.R2_BUCKET,
-            "ContentType": content_type,
+            "ContentType": "multipart/form-data",
             "Key": key,
         },
         ExpiresIn=600,  # 10분
