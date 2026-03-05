@@ -133,8 +133,7 @@ async def init_image_upload(
             Params={
                 "Bucket": settings.R2_BUCKET,
                 "Key": key,
-            },
-            ExpiresIn=600,
+            }
         )
     except Exception as e:
         raise HTTPException(status_code=404, detail=str(e))
