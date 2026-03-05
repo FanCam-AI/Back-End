@@ -80,40 +80,7 @@ async def init_video_upload(
     filename: str = Form(...),
     current_user: User = Depends(get_current_user),
 ):
-    key = f"videos/{current_user.id}/{uuid.uuid4()}/{filename}"
-    _, ext = os.path.splitext(filename)
-    ext = ext.lower()
-
-    if ext == ".mov":
-        content_type = "video/quicktime"
-    elif ext == ".mp4":
-        content_type = "video/mp4"
-    else:
-        content_type = "application/octet-stream"
-
-    url = r2_client.generate_presigned_url(
-        ClientMethod="put_object",
-        Params={
-            "Bucket": settings.R2_BUCKET,
-            "ContentType": "video/quicktime",
-            "Key": key,
-        }
-    )
-    parsed = urlparse(url)
-    query = parse_qs(parsed.query)
-
-    logger.warning(f"presigned_url           = {url}")
-    logger.warning("R2 PRESIGN DEBUG =========================")
-    logger.warning(f"filename      = {filename}")
-    logger.warning(f"content_type  = {repr(content_type)}")
-    logger.warning(f"signedHeaders = {query.get('X-Amz-SignedHeaders')}")
-    logger.warning(f"expires       = {query.get('X-Amz-Expires')}")
-    logger.warning(f"algorithm     = {query.get('X-Amz-Algorithm')}")
-    logger.warning(
-        "raw_query     = %s",
-        json.dumps(query, indent=2)
-    )
-    logger.warning("==========================================")
+    key, url = service.init_video_upload_r2_service(filename, current_user.id)
 
     return {
         "key": key,
@@ -125,18 +92,7 @@ async def init_image_upload(
     filename: str = Form(...),
     current_user: User = Depends(get_current_user),
 ):
-    try:
-        key = f"images/{current_user.id}/{uuid.uuid4()}/{filename}"
-
-        url = r2_client.generate_presigned_url(
-            ClientMethod="put_object",
-            Params={
-                "Bucket": settings.R2_BUCKET,
-                "Key": key,
-            }
-        )
-    except Exception as e:
-        raise HTTPException(status_code=404, detail=str(e))
+    key, url = service.init_image_upload_r2_service(filename, current_user.id)
 
     return {
         "key": key,
