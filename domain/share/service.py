@@ -75,7 +75,7 @@ def preview_file_service(db: Session, request, public_id):
 def get_protected_form(db: Session, request, public_id):
     result = crud.get_result_by_public_id(db, public_id)
     if not result:
-        return file_not_found_form("❌ File not found.")
+        return file_not_found_form(request, "❌ File not found.")
 
     file_cdn_url = f"{cdn_base_url}/{result.file_path}"
 
@@ -89,18 +89,18 @@ def get_protected_form(db: Session, request, public_id):
 
 
 
-def check_password(db: Session, public_id, password):
+def check_password(db: Session, request, public_id, password):
     result = crud.get_result_by_public_id(db, public_id)
     file_url = f"{cdn_base_url}/{result.file_path}"
 
     if not result:
-        return file_not_found_form("❌ File not found.")
+        return file_not_found_form(request, "❌ File not found.")
 
     if not result.is_protected:
         return RedirectResponse(url=file_url, status_code=303)
 
     if not bcrypt.verify(password, result.password):
-        return password_form("❌ Wrong password, try again.")
+        return password_form(request, "❌ Wrong password, try again.")
 
     return RedirectResponse(url=file_url, status_code=303)
 

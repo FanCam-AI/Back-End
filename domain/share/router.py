@@ -31,8 +31,8 @@ async def get_protected_form(request: Request, public_id: str, db: Session = Dep
 
 
 @share_router.post("/protected/{public_id}")
-async def check_password(public_id: str, password: str = Form(...), db: Session = Depends(get_db)):
-    response = service.check_password(db, public_id, password)
+async def check_password(request: Request, public_id: str, password: str = Form(...), db: Session = Depends(get_db)):
+    response = service.check_password(db, request, public_id, password)
     return response
 
 
