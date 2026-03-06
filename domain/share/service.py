@@ -11,7 +11,6 @@ base_url = "https://fancamai.com"
 cdn_base_url = "https://cdn.fancamai.com"
 
 
-
 def get_result_list_service(db: Session, user_id) -> Result:
 
     _result_list = crud.get_result_list_by_user_id(db, user_id=user_id)
@@ -53,7 +52,7 @@ def file_not_found_form(request, error_message: str = ""):
 def preview_file_service(db: Session, request, public_id):
     result = crud.get_result_by_public_id(db, public_id)
     if not result:
-        return file_not_found_form("❌ File not found.")
+        return file_not_found_form(request, "❌ File not found.")
     file_cdn_url = f"{cdn_base_url}/{result.file_path}"
     appstore_url = "https://apps.apple.com/kr/app/fancam-ai/id6752274658"
 
