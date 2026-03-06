@@ -21,7 +21,7 @@ def get_result_list_service(db: Session, user_id) -> Result:
             result.owner_url = f"{cdn_base_url}/{result.file_path}"
 
             if result.is_protected:
-                result.share_url = f"{base_url}/preview/{result.public_id}"
+                result.share_url = f"{base_url}/share/preview/{result.public_id}"
             else:
                 result.share_url = f"{cdn_base_url}/{result.file_path}"
 
