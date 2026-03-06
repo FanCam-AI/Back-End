@@ -6,7 +6,7 @@ from fastapi.responses import RedirectResponse
 from passlib.hash import bcrypt
 
 
-templates = Jinja2Templates(directory="templates")
+templates = Jinja2Templates(directory="domain/share/templates")
 base_url = "https://fancamai.com"
 cdn_base_url = "https://cdn.fancamai.com"
 
