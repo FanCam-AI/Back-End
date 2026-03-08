@@ -149,3 +149,28 @@ async def refresh_access_token(
         )
 
     return response
+
+@auth_router.post("/auth/qr-session")
+def create_qr_session():
+
+    token, qr_url = service.create_qr_session_service()
+
+    return {
+        "qr_token": token,
+        "qr_url": qr_url
+    }
+
+
+@auth_router.get("/auth/qr-status/{token}")
+def status(token:str):
+
+
+    access, refresh = service.qr_status(token)
+
+
+
+    return {
+        "status":"approved",
+        "access_token":access,
+        "refresh_token":refresh
+    }

@@ -1,5 +1,6 @@
 from infra import client_secret, oauth_google, oauth_apple, redis_client
 from . import crud, schema
+import uuid, json
 from config import settings
 from sqlalchemy.orm import Session
 from fastapi import HTTPException
@@ -145,3 +146,38 @@ async def refresh_user_token(db: Session, old_refresh_token: str):
 
     except JoseError:
         raise HTTPException(status_code=401, detail="Invalid refresh token")
+
+
+
+def create_qr_session_service():
+    token = str(uuid.uuid4())
+
+    redis_client.setex(
+        f"qr_session:{token}",
+        120,
+        "pending"
+    )
+
+    qr_url = f"https://fancamai.com/qr-login?token={token}"
+
+    return token, qr_url
+
+
+
+def qr_status(token):
+    data = redis_client.get(f"qr:{token}")
+
+    if not data:
+        return {"status": "expired"}
+
+    session = json.loads(data)
+
+    if session["status"] != "approved":
+        return {"status": "pending"}
+
+    access = "access"
+    refresh = "refresh"
+
+    redis_client.delete(f"qr:{token}")
+
+    return access, refresh
