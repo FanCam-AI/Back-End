@@ -7,11 +7,6 @@ from fastapi import HTTPException, Form
 from typing import Optional
 from domain.token import get_current_user
 from . import service
-from infra import r2_client
-from config import settings, logger
-import uuid, os
-from urllib.parse import urlparse, parse_qs
-import json
 
 
 result_router = APIRouter(prefix="/result")

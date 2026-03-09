@@ -181,3 +181,20 @@ async def qr_status(token):
     await redis_client.delete(f"qr:{token}")
 
     return access, refresh
+
+
+async def approve_qr_service(token, user_id):
+    key = f"qr_session:{token}"
+
+    if not redis_client.exists(key):
+        return {"error":"expired"}
+
+    redis_client.set(
+        key,
+        json.dumps({
+            "status": "approved",
+            "user_id": user_id
+        })
+    )
+
+    return {"status":"ok"}

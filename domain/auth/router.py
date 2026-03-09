@@ -7,6 +7,7 @@ import os, secrets
 from config import settings
 from . import service
 from infra import oauth_google, oauth_apple
+from domain.token import get_current_user
 
 auth_router = APIRouter(prefix="/auth")
 
@@ -174,3 +175,10 @@ async def status(token:str):
         "access_token":access,
         "refresh_token":refresh
     }
+
+@auth_router.post("/auth/qr-approve")
+async def approve_qr(token:str, current_user=Depends(get_current_user)):
+
+    approve_status = await service.approve_qr_service(token, current_user.id)
+
+    return approve_status
