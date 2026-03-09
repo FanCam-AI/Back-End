@@ -149,10 +149,10 @@ async def refresh_user_token(db: Session, old_refresh_token: str):
 
 
 
-def create_qr_session_service():
+async def create_qr_session_service():
     token = str(uuid.uuid4())
 
-    redis_client.setex(
+    await redis_client.setex(
         f"qr_session:{token}",
         120,
         "pending"
@@ -164,8 +164,8 @@ def create_qr_session_service():
 
 
 
-def qr_status(token):
-    data = redis_client.get(f"qr:{token}")
+async def qr_status(token):
+    data = await redis_client.get(f"qr:{token}")
 
     if not data:
         return {"status": "expired"}
@@ -178,6 +178,6 @@ def qr_status(token):
     access = "access"
     refresh = "refresh"
 
-    redis_client.delete(f"qr:{token}")
+    await redis_client.delete(f"qr:{token}")
 
     return access, refresh
