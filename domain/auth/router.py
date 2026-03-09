@@ -162,7 +162,7 @@ async def create_qr_session():
     }
 
 
-@auth_router.get("/qr-status/{token}")
+@auth_router.get("/qr-status")
 async def status(token: str = Form(...)):
     return await service.qr_status(token)
 
