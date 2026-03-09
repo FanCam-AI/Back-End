@@ -152,10 +152,15 @@ async def refresh_user_token(db: Session, old_refresh_token: str):
 async def create_qr_session_service():
     token = str(uuid.uuid4())
 
+    key = f"qr_session:{token}"
+
     await redis_client.setex(
-        f"qr_session:{token}",
-        120,
-        "pending"
+        key,
+        120,  # 2분
+        json.dumps({
+            "status": "pending",
+            "user_id": None
+        })
     )
 
     qr_url = f"https://fancamai.com/qr-login?token={token}"
@@ -164,37 +169,59 @@ async def create_qr_session_service():
 
 
 
-async def qr_status(token):
-    data = await redis_client.get(f"qr:{token}")
+async def qr_status(token: str):
+
+    key = f"qr_session:{token}"
+
+    data = await redis_client.get(key)
 
     if not data:
         return {"status": "expired"}
 
     session = json.loads(data)
 
-    if session["status"] != "approved":
+    if session["status"] == "pending":
         return {"status": "pending"}
 
-    access = "access"
-    refresh = "refresh"
+    if session["status"] == "approved":
 
-    await redis_client.delete(f"qr:{token}")
+        user_id = session["user_id"]
 
-    return access, refresh
+        access = "access"
+        refresh = "refresh"
+
+        await redis_client.delete(key)
+
+        return {
+            "status": "approved",
+            "access_token": access,
+            "refresh_token": refresh
+        }
+
+    return {"status": "invalid"}
 
 
-async def approve_qr_service(token, user_id):
+async def approve_qr_service(token: str, user_id: int):
+
     key = f"qr_session:{token}"
 
-    if not redis_client.exists(key):
-        return {"error":"expired"}
+    data = await redis_client.get(key)
 
-    redis_client.set(
+    if not data:
+        return {"status": "expired"}
+
+    session = json.loads(data)
+
+    if session["status"] != "pending":
+        return {"status": "invalid"}
+
+    session["status"] = "approved"
+    session["user_id"] = user_id
+
+    await redis_client.setex(
         key,
-        json.dumps({
-            "status": "approved",
-            "user_id": user_id
-        })
+        120,
+        json.dumps(session)
     )
 
-    return {"status":"ok"}
+    return {"status": "ok"}

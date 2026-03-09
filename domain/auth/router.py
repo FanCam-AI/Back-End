@@ -166,15 +166,7 @@ async def create_qr_session():
 async def status(token:str):
 
 
-    access, refresh = await service.qr_status(token)
-
-
-
-    return {
-        "status":"approved",
-        "access_token":access,
-        "refresh_token":refresh
-    }
+    return await service.qr_status(token)
 
 @auth_router.post("/auth/qr-approve")
 async def approve_qr(token:str, current_user=Depends(get_current_user)):
