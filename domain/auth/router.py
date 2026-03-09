@@ -164,12 +164,11 @@ async def create_qr_session():
 
 @auth_router.get("/qr-status/{token}")
 async def status(token:str):
-
-
     return await service.qr_status(token)
 
 @auth_router.post("/qr-approve")
-async def approve_qr(token:str, current_user=Depends(get_current_user)):
+async def approve_qr(token: str = Form(...),
+                     current_user=Depends(get_current_user)):
 
     approve_status = await service.approve_qr_service(token, current_user.id)
 
