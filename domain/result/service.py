@@ -102,6 +102,8 @@ def init_video_upload_r2_service(filename, user_id):
         content_type = "video/quicktime"
     elif ext == ".mp4":
         content_type = "video/mp4"
+    elif ext == ".webm":
+        content_type = "video/webm"
     else:
         content_type = "application/octet-stream"
 
