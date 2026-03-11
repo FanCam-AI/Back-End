@@ -169,7 +169,7 @@ async def create_qr_session_service():
 
 
 
-async def qr_status(token: str):
+async def qr_status(db:Session, token: str):
 
     key = f"qr_session:{token}"
 
@@ -187,15 +187,16 @@ async def qr_status(token: str):
 
         user_id = session["user_id"]
 
-        access = "access"
-        refresh = "refresh"
+        user = crud.get_user_by_id(db, user_id=user_id)
+        access_token = await create_access_token(user)
+        refresh_token = await create_refresh_token(user)
 
         await redis_client.delete(key)
 
         return {
             "status": "approved",
-            "access_token": access,
-            "refresh_token": refresh
+            "access_token": access_token,
+            "refresh_token": refresh_token
         }
 
     return {"status": "invalid"}
