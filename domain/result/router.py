@@ -59,7 +59,7 @@ async def make_result_video_or_gif(
     video_or_gif: str = Form(...),
     detection_model_type: str = Form(...),
     tracking_mode: str = Form("precision"),
-    drag_box: Optional[List[str]] = Form(None),
+    drag_box: Optional[List[int]] = Form(None),
     current_user: User = Depends(get_current_user)
 ):
     status = await service.make_result_service(video_key=video_key, target_image_keys=target_image_keys,
