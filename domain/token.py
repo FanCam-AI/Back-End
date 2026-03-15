@@ -32,6 +32,10 @@ def _resolve_user_and_token(
         payload = jwt.decode(token, settings.SECRET_KEY)
         payload.validate()
         user_id = payload.get("sub")
+        token_type = payload.get("type")
+
+        if token_type not in ("access", "result"):
+            raise HTTPException(status_code=401, detail="Invalid token type")
     except JoseError:
         raise HTTPException(status_code=401, detail="Invalid token")
 
