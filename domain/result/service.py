@@ -59,6 +59,10 @@ def save_result_service(db: Session, title, file_path, file_type, user_id):
 
 
 async def make_result_service(video_key, target_image_keys, spot_list, video_or_gif, detection_model_type, tracking_mode, drag_box, user):
+    status = await redis_client.get(f"job_status:{user.id}")
+    if status == "processing":
+        return {"status": "processing"}
+
     f = Fernet(settings.FERNET_KEY)
     result_token = await create_result_token(user)
     encrypted_token = f.encrypt(result_token.encode()).decode()
