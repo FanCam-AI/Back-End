@@ -42,6 +42,8 @@ class Settings(BaseSettings):
     RUNPOD_URL: str
     CLOUD_RUN_URL: str
     PROTECTION_PASSWORD: str
+    CPU_RUNPOD_URL: str
+    GPU_RUNPOD_URL: str
 
     # pydantic v2 config
     model_config = SettingsConfigDict(
