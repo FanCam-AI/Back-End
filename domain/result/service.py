@@ -85,13 +85,21 @@ async def make_result_service(video_key, target_image_keys, spot_list, video_or_
         }
     }
 
+    if tracking_mode == "normal":
+        async with httpx.AsyncClient(timeout=10.0) as client:
+            response = await client.post(
+                f'https://{settings.CPU_RUNPOD_URL}.api.runpod.ai/process_run',
+                headers=headers,
+                json=data
+            )
 
-    async with httpx.AsyncClient() as client:
-        response = await client.post(
-            f'https://{settings.RUNPOD_URL}.api.runpod.ai/process_run',
-            headers=headers,
-            json=data
-        )
+    elif tracking_mode == "precision":
+        async with httpx.AsyncClient(timeout=10.0) as client:
+            response = await client.post(
+                f'https://{settings.GPU_RUNPOD_URL}.api.runpod.ai/process_run',
+                headers=headers,
+                json=data
+            )
 
     await redis_client.set(f"job_status:{user.id}", "processing", ex=25200)
 
