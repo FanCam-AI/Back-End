@@ -88,7 +88,7 @@ async def make_result_service(video_key, target_image_keys, spot_list, video_or_
 
     async with httpx.AsyncClient() as client:
         response = await client.post(
-            f'https://api.runpod.ai/v2/{settings.RUNPOD_URL}/run',
+            f'https://{settings.RUNPOD_URL}.api.runpod.ai/process_run',
             headers=headers,
             json=data
         )
