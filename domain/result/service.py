@@ -231,7 +231,7 @@ async def make_result_service(video_key, target_image_keys, spot_list, video_or_
             try:
                 async with httpx.AsyncClient(timeout=10.0) as client:
                     response = await client.get(
-                        f'https://{settings.GPU_RUNPOD_URL}.api.runpod.ai/cpu_ready',
+                        f'https://{settings.GPU_RUNPOD_URL}.api.runpod.ai/gpu_ready',
                         headers=headers
                     )
 
@@ -295,7 +295,6 @@ async def make_result_service(video_key, target_image_keys, spot_list, video_or_
                 except (ReadTimeout, RequestError):
                     return {"status": "busy"}
 
-    return {"status": "started"}
 
 
 def init_video_upload_r2_service(filename, user_id):
