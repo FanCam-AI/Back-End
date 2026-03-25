@@ -71,8 +71,8 @@ async def make_result_service(video_key, target_image_keys, spot_list, video_or_
     f = Fernet(settings.FERNET_KEY)
     result_token = await create_result_token(user)
     encrypted_token = f.encrypt(result_token.encode()).decode()
-    ml_server_ping = False
-    ml_server_ready = False
+    ml_server_ping = True
+    ml_server_ready = True
     headers = {
         "Content-Type": "application/json",
         "Authorization": f"Bearer {settings.RUNPOD_API_KEY}"
@@ -294,7 +294,6 @@ async def make_result_service(video_key, target_image_keys, spot_list, video_or_
 
                 except (ReadTimeout, RequestError):
                     return {"status": "busy"}
-
 
 
 def init_video_upload_r2_service(filename, user_id):
