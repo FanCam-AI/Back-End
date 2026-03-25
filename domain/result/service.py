@@ -10,6 +10,7 @@ from domain.token import create_result_token
 import json
 import uuid
 import os
+from httpx import ReadTimeout, RequestError
 
 async def result_reset_status(user_id):
     await redis_client.delete(f"job_status:{user_id}")
@@ -58,6 +59,9 @@ def save_result_service(db: Session, title, file_path, file_type, user_id):
     return True
 
 
+
+
+
 async def make_result_service(video_key, target_image_keys, spot_list, video_or_gif, detection_model_type, tracking_mode, drag_box, user):
     # status = await redis_client.get(f"job_status:{user.id}")
     # if status == "processing":
@@ -88,175 +92,187 @@ async def make_result_service(video_key, target_image_keys, spot_list, video_or_
     }
 
     if tracking_mode == "normal":
-        async with httpx.AsyncClient(timeout=10.0) as client:
-            response = await client.get(
-                f'https://{settings.CPU_RUNPOD_URL}.api.runpod.ai/ping',
-                headers=headers
-            )
-
-            if response.status_code == 200:
-                data = response.json()
-                status_value = data['status']
-                if status_value == "healthy":
-                    ml_server_ping = True
-            else:
-                async with httpx.AsyncClient(timeout=10.0) as client:
-                    response = await client.get(
-                        f'https://ml-server.fancamai.com/ping',
-                        headers=headers
-                    )
-
-                    if response.status_code == 200:
-                        data = response.json()
-                        status_value = data['status']
-                        if status_value == "healthy":
-                            ml_server_ping = True
-                    else:
-                        ml_server_ping = False
-                        return {"status": "busy"}
-
-        if ml_server_ping:
+        try:
             async with httpx.AsyncClient(timeout=10.0) as client:
                 response = await client.get(
-                    f'https://{settings.CPU_RUNPOD_URL}.api.runpod.ai/cpu_ready',
+                    f'https://{settings.CPU_RUNPOD_URL}.api.runpod.ai/ping',
                     headers=headers
                 )
 
                 if response.status_code == 200:
                     data = response.json()
                     status_value = data['status']
-                    if status_value == "ready":
-                        ml_server_ready = True
-
-                    if status_value == "not_ready":
-                        ml_server_ready = False
-                        return {"status": "busy"}
-
-
+                    if status_value == "healthy":
+                        ml_server_ping = True
                 else:
                     async with httpx.AsyncClient(timeout=10.0) as client:
                         response = await client.get(
-                            f'https://ml-server.fancamai.com/cpu_ready',
+                            f'https://ml-server.fancamai.com/ping',
                             headers=headers
                         )
 
                         if response.status_code == 200:
                             data = response.json()
                             status_value = data['status']
-                            if status_value == "ready":
-                                ml_server_ready = True
+                            if status_value == "healthy":
+                                ml_server_ping = True
                         else:
+                            ml_server_ping = False
+                            return {"status": "busy"}
+
+            if ml_server_ping:
+                async with httpx.AsyncClient(timeout=10.0) as client:
+                    response = await client.get(
+                        f'https://{settings.CPU_RUNPOD_URL}.api.runpod.ai/cpu_ready',
+                        headers=headers
+                    )
+
+                    if response.status_code == 200:
+                        data = response.json()
+                        status_value = data['status']
+                        if status_value == "ready":
+                            ml_server_ready = True
+
+                        if status_value == "not_ready":
                             ml_server_ready = False
                             return {"status": "busy"}
 
-        if ml_server_ready:
-            async with httpx.AsyncClient(timeout=10.0) as client:
-                response = await client.post(
-                    f'https://{settings.CPU_RUNPOD_URL}.api.runpod.ai/process_run',
-                    headers=headers,
-                    json=data
-                )
-                if response.status_code == 200:
-                    await redis_client.set(f"job_status:{user.id}", "processing", ex=25200)
-                    return {"status": "started"}
-                else:
-                    async with httpx.AsyncClient(timeout=10.0) as client:
-                        response = await client.post(
-                            f'https://ml-server.fancamai.com/process_run',
-                            headers=headers,
-                            json=data
-                        )
+
+                    else:
+                        async with httpx.AsyncClient(timeout=10.0) as client:
+                            response = await client.get(
+                                f'https://ml-server.fancamai.com/cpu_ready',
+                                headers=headers
+                            )
+
+                            if response.status_code == 200:
+                                data = response.json()
+                                status_value = data['status']
+                                if status_value == "ready":
+                                    ml_server_ready = True
+                            else:
+                                ml_server_ready = False
+                                return {"status": "busy"}
+
+            if ml_server_ready:
+                async with httpx.AsyncClient(timeout=10.0) as client:
+                    response = await client.post(
+                        f'https://{settings.CPU_RUNPOD_URL}.api.runpod.ai/process_run',
+                        headers=headers,
+                        json=data
+                    )
                     if response.status_code == 200:
                         await redis_client.set(f"job_status:{user.id}", "processing", ex=25200)
                         return {"status": "started"}
-
                     else:
-                        return {"status": "busy"}
+                        async with httpx.AsyncClient(timeout=10.0) as client:
+                            response = await client.post(
+                                f'https://ml-server.fancamai.com/process_run',
+                                headers=headers,
+                                json=data
+                            )
+                        if response.status_code == 200:
+                            await redis_client.set(f"job_status:{user.id}", "processing", ex=25200)
+                            return {"status": "started"}
+
+                        else:
+                            return {"status": "busy"}
+
+        except (ReadTimeout, RequestError):
+            ml_server_ping = False
+            ml_server_ready = False
+            return {"status": "busy"}
 
     elif tracking_mode == "precision":
-        async with httpx.AsyncClient(timeout=10.0) as client:
-            response = await client.get(
-                f'https://{settings.GPU_RUNPOD_URL}.api.runpod.ai/ping',
-                headers=headers
-            )
-
-            if response.status_code == 200:
-                data = response.json()
-                status_value = data['status']
-                if status_value == "healthy":
-                    ml_server_ping = True
-            else:
-                async with httpx.AsyncClient(timeout=10.0) as client:
-                    response = await client.get(
-                        f'https://ml-server.fancamai.com/ping',
-                        headers=headers
-                    )
-
-                    if response.status_code == 200:
-                        data = response.json()
-                        status_value = data['status']
-                        if status_value == "healthy":
-                            ml_server_ping = True
-                    else:
-                        ml_server_ping = False
-                        return {"status": "busy"}
-
-        if ml_server_ping:
+        try:
             async with httpx.AsyncClient(timeout=10.0) as client:
                 response = await client.get(
-                    f'https://{settings.GPU_RUNPOD_URL}.api.runpod.ai/cpu_ready',
+                    f'https://{settings.GPU_RUNPOD_URL}.api.runpod.ai/ping',
                     headers=headers
                 )
 
                 if response.status_code == 200:
                     data = response.json()
                     status_value = data['status']
-                    if status_value == "ready":
-                        ml_server_ready = True
-
-                    if status_value == "not_ready":
-                        ml_server_ready = False
-                        return {"status": "busy"}
-
+                    if status_value == "healthy":
+                        ml_server_ping = True
                 else:
                     async with httpx.AsyncClient(timeout=10.0) as client:
                         response = await client.get(
-                            f'https://ml-server.fancamai.com/gpu_ready',
+                            f'https://ml-server.fancamai.com/ping',
                             headers=headers
                         )
 
                         if response.status_code == 200:
                             data = response.json()
                             status_value = data['status']
-                            if status_value == "ready":
-                                ml_server_ready = True
+                            if status_value == "healthy":
+                                ml_server_ping = True
                         else:
+                            ml_server_ping = False
+                            return {"status": "busy"}
+
+            if ml_server_ping:
+                async with httpx.AsyncClient(timeout=10.0) as client:
+                    response = await client.get(
+                        f'https://{settings.GPU_RUNPOD_URL}.api.runpod.ai/cpu_ready',
+                        headers=headers
+                    )
+
+                    if response.status_code == 200:
+                        data = response.json()
+                        status_value = data['status']
+                        if status_value == "ready":
+                            ml_server_ready = True
+
+                        if status_value == "not_ready":
                             ml_server_ready = False
                             return {"status": "busy"}
 
-        if ml_server_ready:
-            async with httpx.AsyncClient(timeout=10.0) as client:
-                response = await client.post(
-                    f'https://{settings.GPU_RUNPOD_URL}.api.runpod.ai/process_run',
-                    headers=headers,
-                    json=data
-                )
-                if response.status_code == 200:
-                    await redis_client.set(f"job_status:{user.id}", "processing", ex=25200)
-                    return {"status": "started"}
-                else:
-                    async with httpx.AsyncClient(timeout=10.0) as client:
-                        response = await client.post(
-                            f'https://ml-server.fancamai.com/process_run',
-                            headers=headers,
-                            json=data
-                        )
+                    else:
+                        async with httpx.AsyncClient(timeout=10.0) as client:
+                            response = await client.get(
+                                f'https://ml-server.fancamai.com/gpu_ready',
+                                headers=headers
+                            )
+
+                            if response.status_code == 200:
+                                data = response.json()
+                                status_value = data['status']
+                                if status_value == "ready":
+                                    ml_server_ready = True
+                            else:
+                                ml_server_ready = False
+                                return {"status": "busy"}
+
+            if ml_server_ready:
+                async with httpx.AsyncClient(timeout=10.0) as client:
+                    response = await client.post(
+                        f'https://{settings.GPU_RUNPOD_URL}.api.runpod.ai/process_run',
+                        headers=headers,
+                        json=data
+                    )
                     if response.status_code == 200:
                         await redis_client.set(f"job_status:{user.id}", "processing", ex=25200)
                         return {"status": "started"}
-
                     else:
-                        return {"status": "busy"}
+                        async with httpx.AsyncClient(timeout=10.0) as client:
+                            response = await client.post(
+                                f'https://ml-server.fancamai.com/process_run',
+                                headers=headers,
+                                json=data
+                            )
+                        if response.status_code == 200:
+                            await redis_client.set(f"job_status:{user.id}", "processing", ex=25200)
+                            return {"status": "started"}
+
+                        else:
+                            return {"status": "busy"}
+
+        except (ReadTimeout, RequestError):
+            ml_server_ping = False
+            ml_server_ready = False
+            return {"status": "busy"}
 
     return {"status": "started"}
 
