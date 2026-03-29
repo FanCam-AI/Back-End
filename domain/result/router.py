@@ -36,6 +36,16 @@ async def delete_result(result_id: int, db: Session = Depends(get_db), current_u
 
     return response
 
+@result_router.get("/check_ml_server_status")
+async def check_ml_server_status(tracking_mode: str = Form("normal"), current_user: User = Depends(get_current_user)):
+    try:
+        response = service.check_ml_server_status_service(tracking_mode)
+
+    except HTTPException:
+        raise HTTPException(status_code=404, detail="ml server busy")
+
+    return response
+
 
 @result_router.post("/save_result")
 async def save_result(
@@ -58,7 +68,7 @@ async def make_result_video_or_gif(
     spot_list: str = Form(...),
     video_or_gif: str = Form(...),
     detection_model_type: str = Form(...),
-    tracking_mode: str = Form("precision"),
+    tracking_mode: str = Form("normal"),
     drag_box: Optional[List[int]] = Form(None),
     current_user: User = Depends(get_current_user)
 ):
