@@ -65,7 +65,7 @@ def save_result_service(db: Session, title, file_path, file_type, user_id):
 async def make_result_service(video_key, target_image_keys, spot_list, video_or_gif, detection_model_type, tracking_mode, drag_box, user):
     # status = await redis_client.get(f"job_status:{user.id}")
     # if status == "processing":
-    #     ## video key랑 target imgaes key r2에서 지우는 로직
+    #     delete_init_files_service(video_key, target_image_keys, settings.R2_BUCKET)
     #     return {"status": "processing"}
 
     f = Fernet(settings.FERNET_KEY)
@@ -107,7 +107,7 @@ async def make_result_service(video_key, target_image_keys, spot_list, video_or_
 
                     elif ready_value == "not_ready":
                         ml_serverless_ready = False
-                        return {"status": "busy"}
+                        raise RequestError("Not ready")
 
         except (ReadTimeout, RequestError):
             ml_serverless_ready = False
@@ -126,12 +126,15 @@ async def make_result_service(video_key, target_image_keys, spot_list, video_or_
 
                         elif ready_value == "not_ready":
                             ml_server_ready = False
+                            delete_init_files_service(video_key, target_image_keys, settings.R2_BUCKET)
                             return {"status": "busy"}
                     else:
                         ml_server_ready = False
+                        delete_init_files_service(video_key, target_image_keys, settings.R2_BUCKET)
                         return {"status": "busy"}
 
             except (ReadTimeout, RequestError):
+                delete_init_files_service(video_key, target_image_keys, settings.R2_BUCKET)
                 return {"status": "busy"}
 
     if ml_serverless_ready:
@@ -147,6 +150,7 @@ async def make_result_service(video_key, target_image_keys, spot_list, video_or_
                     return {"status": "started"}
 
         except (ReadTimeout, RequestError):
+            delete_init_files_service(video_key, target_image_keys, settings.R2_BUCKET)
             return {"status": "busy"}
 
 
@@ -163,9 +167,11 @@ async def make_result_service(video_key, target_image_keys, spot_list, video_or_
                 await redis_client.set(f"job_status:{user.id}", "processing", ex=25200)
                 return {"status": "started"}
             else:
+                delete_init_files_service(video_key, target_image_keys, settings.R2_BUCKET)
                 return {"status": "busy"}
 
         except (ReadTimeout, RequestError):
+            delete_init_files_service(video_key, target_image_keys, settings.R2_BUCKET)
             return {"status": "busy"}
 
 
@@ -187,7 +193,7 @@ async def make_result_service(video_key, target_image_keys, spot_list, video_or_
 
                     if status_value == "not_ready":
                         ml_serverless_ready = False
-                        return {"status": "busy"}
+                        raise RequestError("Not ready yet")
 
         except (ReadTimeout, RequestError):
             try:
@@ -204,10 +210,11 @@ async def make_result_service(video_key, target_image_keys, spot_list, video_or_
                             ml_server_ready = True
                     else:
                         ml_server_ready = False
-
+                        delete_init_files_service(video_key, target_image_keys, settings.R2_BUCKET)
                         return {"status": "busy"}
 
             except (ReadTimeout, RequestError):
+                delete_init_files_service(video_key, target_image_keys, settings.R2_BUCKET)
                 return {"status": "busy"}
 
         if ml_serverless_ready:
@@ -223,6 +230,7 @@ async def make_result_service(video_key, target_image_keys, spot_list, video_or_
                         return {"status": "started"}
 
             except (ReadTimeout, RequestError):
+                delete_init_files_service(video_key, target_image_keys, settings.R2_BUCKET)
                 return {"status": "busy"}
 
         if ml_server_ready:
@@ -239,9 +247,11 @@ async def make_result_service(video_key, target_image_keys, spot_list, video_or_
                     return {"status": "started"}
 
                 else:
+                    delete_init_files_service(video_key, target_image_keys, settings.R2_BUCKET)
                     return {"status": "busy"}
 
             except (ReadTimeout, RequestError):
+                delete_init_files_service(video_key, target_image_keys, settings.R2_BUCKET)
                 return {"status": "busy"}
 
     return {"status": "busy"}
@@ -285,3 +295,112 @@ def init_image_upload_r2_service(filename, user_id):
     )
 
     return key, url
+
+
+def delete_init_files_service(video_key, target_image_keys, bucket_name):
+    keys = []
+
+    if video_key:
+        keys.append(video_key)
+
+    if target_image_keys:
+        keys.extend([k for k in target_image_keys if k])
+
+    if not keys:
+        return
+
+    try:
+        r2_client.delete_objects(
+            Bucket=bucket_name,
+            Delete={
+                "Objects": [{"Key": k} for k in keys],
+                "Quiet": True
+            }
+        )
+    except ClientError:
+        logger.error("Failed to delete initial files")
+
+async def check_ml_server_status_service(tracking_mode):
+    headers = {
+        "Content-Type": "application/json",
+        "Authorization": f"Bearer {settings.RUNPOD_API_KEY}"
+    }
+
+    if tracking_mode == "normal":
+        try:
+            async with httpx.AsyncClient(timeout=3) as client:
+                response = await client.get(
+                    f'https://{settings.CPU_RUNPOD_URL}.api.runpod.ai/cpu_ready',
+                    headers=headers
+                )
+
+                if response.status_code == 200:
+                    data = response.json()
+                    ready_value = data['status']
+                    if ready_value == "ready":
+                       return {"status": "ready"}
+
+                    if ready_value == "not_ready":
+                        raise RequestError("Not ready")
+
+
+        except (ReadTimeout, RequestError):
+            try:
+                async with httpx.AsyncClient(timeout=3) as client:
+                    response = await client.get(
+                        f'https://ml-server.fancamai.com/cpu_ready',
+                        headers=headers
+                    )
+
+                    if response.status_code == 200:
+                        data = response.json()
+                        ready_value = data['status']
+                        if ready_value == "ready":
+                            return {"status": "ready"}
+
+                        elif ready_value == "not_ready":
+                            return {"status": "busy"}
+                    else:
+                        return {"status": "busy"}
+
+            except (ReadTimeout, RequestError):
+                return {"status": "busy"}
+
+
+    elif tracking_mode == "precision":
+        try:
+            async with httpx.AsyncClient(timeout=3) as client:
+                response = await client.get(
+                    f'https://{settings.GPU_RUNPOD_URL}.api.runpod.ai/gpu_ready',
+                    headers=headers
+                )
+
+                if response.status_code == 200:
+                    data = response.json()
+                    status_value = data['status']
+                    if status_value == "ready":
+                        return {"status": "ready"}
+
+                    elif status_value == "not_ready":
+                        raise RequestError("Not ready")
+
+        except (ReadTimeout, RequestError):
+            try:
+                async with httpx.AsyncClient(timeout=3) as client:
+                    response = await client.get(
+                        f'https://ml-server.fancamai.com/gpu_ready',
+                        headers=headers
+                    )
+
+                    if response.status_code == 200:
+                        data = response.json()
+                        status_value = data['status']
+                        if status_value == "ready":
+                            return {"status": "ready"}
+                    else:
+                        return {"status": "busy"}
+
+            except (ReadTimeout, RequestError):
+                return {"status": "busy"}
+
+    return {"status": "busy"}
