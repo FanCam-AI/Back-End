@@ -14,6 +14,8 @@ RUN apt-get update && apt-get install -y \
 
 # deps
 COPY requirements.txt .
+RUN pip install --upgrade wheel
+RUN pip install --upgrade setuptools
 RUN pip install --upgrade pip && pip install -r requirements.txt
 
 # app
