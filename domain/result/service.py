@@ -398,9 +398,9 @@ async def check_ml_server_ready_service(tracking_mode):
                         if status_value == "ready":
                             return {"status": "ready"}
                     else:
-                        return {"status": "busy"}
+                        return {"status": "not_ready"}
 
             except (ReadTimeout, RequestError):
-                return {"status": "busy"}
+                return {"status": "not_ready"}
 
-    return {"status": "busy"}
+    return {"status": "not_ready"}
