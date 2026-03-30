@@ -36,13 +36,13 @@ async def delete_result(result_id: int, db: Session = Depends(get_db), current_u
 
     return response
 
-@result_router.get("/check_ml_server_status")
-async def check_ml_server_status(tracking_mode: str = Form("normal"), current_user: User = Depends(get_current_user)):
+@result_router.post("/check_ml_server_ready")
+async def check_ml_server_ready(tracking_mode: str = "normal", current_user: User = Depends(get_current_user)):
     try:
-        response = service.check_ml_server_status_service(tracking_mode)
+        response = service.check_ml_server_ready_service(tracking_mode)
 
     except HTTPException:
-        raise HTTPException(status_code=404, detail="ml server busy")
+        raise HTTPException(status_code=404, detail="ml server not ready")
 
     return response
 

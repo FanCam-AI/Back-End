@@ -320,7 +320,7 @@ def delete_init_files_service(video_key, target_image_keys, bucket_name):
     except ClientError:
         logger.error("Failed to delete initial files")
 
-async def check_ml_server_status_service(tracking_mode):
+async def check_ml_server_ready_service(tracking_mode):
     headers = {
         "Content-Type": "application/json",
         "Authorization": f"Bearer {settings.RUNPOD_API_KEY}"
@@ -359,12 +359,12 @@ async def check_ml_server_status_service(tracking_mode):
                             return {"status": "ready"}
 
                         elif ready_value == "not_ready":
-                            return {"status": "busy"}
+                            return {"status": "not_ready"}
                     else:
-                        return {"status": "busy"}
+                        return {"status": "not_ready"}
 
             except (ReadTimeout, RequestError):
-                return {"status": "busy"}
+                return {"status": "not_ready"}
 
 
     elif tracking_mode == "precision":
