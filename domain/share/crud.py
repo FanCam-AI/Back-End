@@ -51,7 +51,7 @@ def make_result_private(db: Session, user_id: int, result_id: int, password: str
     )
 
 def get_result_by_id(db: Session, result_id, user_id):
-    return db.query(Result).filter(Result.id == result_id, Result.user_id == user_id)
+    return db.query(Result).filter(Result.id == result_id, Result.user_id == user_id).first()
 
 def delete_result(db: Session, result):
     db.delete(result)
