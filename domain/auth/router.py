@@ -81,16 +81,15 @@ async def auth_google_callback(request: Request, db: Session = Depends(get_db)):
 
 
 @auth_router.post("/logout")
-async def logout(request: Request):
-    refresh_token = request.cookies.get("refresh_token")
+async def logout(request: Request, authorization: str = Header(None)):
+    old_refresh_token = request.cookies.get("refresh_token")
+    if not old_refresh_token and authorization and authorization.startswith("Bearer "):
+        old_refresh_token = authorization[7:]
 
-    await service.logout_user(refresh_token)
+    if not old_refresh_token:
+        raise HTTPException(status_code=401, detail="Refresh token missing")
 
-    response = JSONResponse(content={"message": "Logged out"})
-    response.delete_cookie("access_token")
-    response.delete_cookie("refresh_token")
-
-    return response
+    await service.logout_user(old_refresh_token)
 
 
 @auth_router.post("/exchange")
