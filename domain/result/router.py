@@ -26,15 +26,6 @@ async def get_processing_status(current_user: User = Depends(get_current_user)):
     status = await service.result_status(user_id=current_user.id)
     return status
 
-@result_router.delete("/{result_id}")
-async def delete_result(result_id: int, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
-    try:
-        response = service.delete_result_by_id(db, result_id, current_user.id)
-
-    except HTTPException:
-        raise HTTPException(status_code=404, detail="Result not found")
-
-    return response
 
 @result_router.get("/check_ml_server_ready")
 async def check_ml_server_ready(tracking_mode: str = "normal", current_user: User = Depends(get_current_user)):

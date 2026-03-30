@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from fastapi.responses import HTMLResponse
 from database import get_db
@@ -53,3 +53,33 @@ async def set_all_public(
 ):
    response = service.set_all_public_service(db, current_user.id)
    return response
+
+
+@share_router.post("/set_private/{result_id}")
+async def set_private(
+    result_id: int,
+    password: str = Form(...),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    return service.set_private_service(db, current_user.id, result_id, password)
+
+
+@share_router.post("/set_public/{result_id}")
+async def set_public(
+    result_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    return service.set_public_service(db, current_user.id, result_id)
+
+
+@share_router.delete("/{result_id}")
+async def delete_result(result_id: int, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    try:
+        response = service.delete_result_by_id(db, result_id, current_user.id)
+
+    except HTTPException:
+        raise HTTPException(status_code=404, detail="Result not found")
+
+    return response

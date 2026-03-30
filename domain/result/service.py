@@ -1,6 +1,5 @@
 from sqlalchemy.orm import Session
 import httpx
-from sqlalchemy.exc import SQLAlchemyError
 from . import crud
 from infra import r2_client, redis_client
 from cryptography.fernet import Fernet
@@ -27,31 +26,6 @@ async def result_status(user_id):
             }
 
 
-def delete_result_by_id(db: Session, result_id, user_id):
-    try:
-        result = crud.get_result_by_id(db, result_id, user_id)
-        if not result:
-            logger.warning(f"Result not found: {result_id}")
-    except Exception:
-        raise
-
-    try:
-        crud.delete_result(db, result)
-        db.commit()
-    except SQLAlchemyError:
-        db.rollback()
-        raise
-
-    if result.file_path:
-        try:
-            r2_client.delete_object(
-                Bucket=settings.R2_BUCKET,
-                Key=result.file_path
-            )
-        except ClientError:
-            logger.warning(f"Failed to delete r2 object, key: {result.file_path}")
-
-    return {"message": "Done"}
 
 
 def save_result_service(db: Session, title, file_path, file_type, user_id):

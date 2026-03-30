@@ -4,6 +4,10 @@ from . import crud
 from sqlalchemy.orm import Session
 from fastapi.responses import RedirectResponse
 from passlib.hash import bcrypt
+from config import settings, logger
+from sqlalchemy.exc import SQLAlchemyError
+from infra import r2_client
+from botocore.exceptions import ClientError
 
 
 templates = Jinja2Templates(directory="domain/share/templates")
@@ -116,3 +120,44 @@ def set_all_public_service(db: Session, user_id):
     updated = crud.make_all_results_public(db, user_id)
     db.commit()
     return {"updated_count": updated, "status": "all set to public"}
+
+
+def set_private_service(db: Session, user_id, result_id, password):
+    hashed_pw = bcrypt.hash(password)
+    updated = crud.make_result_private(db, user_id, result_id, hashed_pw)
+    db.commit()
+    return {"updated_count": updated, "status": "set to private"}
+
+
+def set_public_service(db: Session, user_id, result_id):
+    updated = crud.make_result_public(db, user_id, result_id)
+    db.commit()
+    return {"updated_count": updated, "status": "set to public"}
+
+
+
+def delete_result_by_id(db: Session, result_id, user_id):
+    try:
+        result = crud.get_result_by_id(db, result_id, user_id)
+        if not result:
+            logger.warning(f"Result not found: {result_id}")
+    except Exception:
+        raise
+
+    try:
+        crud.delete_result(db, result)
+        db.commit()
+    except SQLAlchemyError:
+        db.rollback()
+        raise
+
+    if result.file_path:
+        try:
+            r2_client.delete_object(
+                Bucket=settings.R2_BUCKET,
+                Key=result.file_path
+            )
+        except ClientError:
+            logger.warning(f"Failed to delete r2 object, key: {result.file_path}")
+
+    return {"message": "Done"}
