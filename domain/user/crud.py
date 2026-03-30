@@ -39,4 +39,9 @@ def protect_results_by_user(db: Session, user_id, password):
 def delete_user(db: Session, user: User):
     db.delete(user)
 
+def get_result_count_by_user_id(db: Session, user_id: int) -> int:
+    return db.query(Result) \
+             .filter(Result.user_id == user_id) \
+             .count()
+
 
