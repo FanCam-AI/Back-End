@@ -36,7 +36,7 @@ async def delete_result(result_id: int, db: Session = Depends(get_db), current_u
 
     return response
 
-@result_router.post("/check_ml_server_ready")
+@result_router.get("/check_ml_server_ready")
 async def check_ml_server_ready(tracking_mode: str = "normal", current_user: User = Depends(get_current_user)):
     try:
         response = service.check_ml_server_ready_service(tracking_mode)
