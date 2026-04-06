@@ -83,6 +83,9 @@ async def make_result_service(video_key, target_image_keys, spot_list, video_or_
                         ml_serverless_ready = False
                         raise RequestError("Not ready")
 
+                else:
+                    raise RequestError("Not ready")
+
         except (ReadTimeout, RequestError):
             ml_serverless_ready = False
             try:
@@ -122,6 +125,9 @@ async def make_result_service(video_key, target_image_keys, spot_list, video_or_
                 if response.status_code == 200:
                     await redis_client.set(f"job_status:{user.id}", "processing", ex=25200)
                     return {"status": "started"}
+
+                else:
+                    raise RequestError("Not ready")
 
         except (ReadTimeout, RequestError):
             delete_init_files_service(video_key, target_image_keys, settings.R2_BUCKET)
@@ -169,6 +175,9 @@ async def make_result_service(video_key, target_image_keys, spot_list, video_or_
                         ml_serverless_ready = False
                         raise RequestError("Not ready yet")
 
+                else:
+                    raise RequestError("Not ready")
+
         except (ReadTimeout, RequestError):
             try:
                 async with httpx.AsyncClient(timeout=3) as client:
@@ -202,6 +211,9 @@ async def make_result_service(video_key, target_image_keys, spot_list, video_or_
                     if response.status_code == 200:
                         await redis_client.set(f"job_status:{user.id}", "processing", ex=25200)
                         return {"status": "started"}
+
+                    else:
+                        raise RequestError("Not ready")
 
             except (ReadTimeout, RequestError):
                 delete_init_files_service(video_key, target_image_keys, settings.R2_BUCKET)
@@ -318,6 +330,9 @@ async def check_ml_server_ready_service(tracking_mode):
                     if ready_value == "not_ready":
                         raise RequestError("Not ready")
 
+                else:
+                    raise RequestError("Not ready")
+
 
         except (ReadTimeout, RequestError):
             try:
@@ -358,6 +373,9 @@ async def check_ml_server_ready_service(tracking_mode):
 
                     elif status_value == "not_ready":
                         raise RequestError("Not ready")
+
+                else:
+                    raise RequestError("Not ready")
 
         except (ReadTimeout, RequestError):
             try:
