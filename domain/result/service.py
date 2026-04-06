@@ -227,7 +227,8 @@ async def make_result_service(video_key, target_image_keys, spot_list, video_or_
             except (ReadTimeout, RequestError):
                 delete_init_files_service(video_key, target_image_keys, settings.R2_BUCKET)
                 return {"status": "busy"}
-
+            
+    delete_init_files_service(video_key, target_image_keys, settings.R2_BUCKET)
     return {"status": "busy"}
 
 def init_video_upload_r2_service(filename, user_id):
