@@ -30,7 +30,8 @@ app.add_middleware(
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
-        "chrome-extension://jdgldodiaggbdadnclmbbnlclpjdfnhl"
+        "chrome-extension://jdgldodiaggbdadnclmbbnlclpjdfnhl",
+        "chrome-extension://egnckhoidbiojmhdkjndgidhfjkknfim"
     ],
     allow_methods=["*"],
     allow_headers=["*"],
