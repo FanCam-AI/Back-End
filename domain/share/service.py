@@ -59,6 +59,7 @@ def preview_file_service(db: Session, request, public_id):
         return file_not_found_form(request, "❌ File not found.")
     file_cdn_url = f"{cdn_base_url}/{result.file_path}"
     appstore_url = "https://apps.apple.com/kr/app/fancam-ai/id6752274658"
+    chrome_extension_store_url = "https://chromewebstore.google.com/detail/dragtogif/egnckhoidbiojmhdkjndgidhfjkknfim?authuser=0&hl=en"
 
     if not result.is_protected:
         return RedirectResponse(url=file_cdn_url, status_code=303)
@@ -73,6 +74,7 @@ def preview_file_service(db: Session, request, public_id):
                 "og_url": f"{base_url}/share/preview/{public_id}",
                 "protected_url": f"{base_url}/share/protected/{public_id}",
                 "appstore_url": appstore_url,
+                "chrome_extension_store_url": chrome_extension_store_url,
             },
         )
 
