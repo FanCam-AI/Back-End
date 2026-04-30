@@ -123,7 +123,7 @@ async def make_result_service(video_key, target_image_keys, spot_list, video_or_
                     json=input_data
                 )
                 if response.status_code == 200:
-                    await redis_client.set(f"job_status:{user.id}", "processing", ex=25200)
+                    await redis_client.set(f"job_status:{user.id}", "processing", ex=300)
                     return {"status": "started"}
 
                 else:
@@ -144,7 +144,7 @@ async def make_result_service(video_key, target_image_keys, spot_list, video_or_
                 )
             if response.status_code == 200:
 
-                await redis_client.set(f"job_status:{user.id}", "processing", ex=25200)
+                await redis_client.set(f"job_status:{user.id}", "processing", ex=300)
                 return {"status": "started"}
             else:
                 delete_init_files_service(video_key, target_image_keys, settings.R2_BUCKET)
@@ -209,7 +209,7 @@ async def make_result_service(video_key, target_image_keys, spot_list, video_or_
                         json=input_data
                     )
                     if response.status_code == 200:
-                        await redis_client.set(f"job_status:{user.id}", "processing", ex=25200)
+                        await redis_client.set(f"job_status:{user.id}", "processing", ex=300)
                         return {"status": "started"}
 
                     else:
@@ -229,7 +229,7 @@ async def make_result_service(video_key, target_image_keys, spot_list, video_or_
                     )
                 if response.status_code == 200:
 
-                    await redis_client.set(f"job_status:{user.id}", "processing", ex=25200)
+                    await redis_client.set(f"job_status:{user.id}", "processing", ex=300)
                     return {"status": "started"}
 
                 else:
