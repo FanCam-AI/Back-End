@@ -265,7 +265,7 @@ def init_video_upload_r2_service(filename, user_id):
             "ContentType": content_type,
             "Key": key,
         },
-        ExpiresIn=600,  # 10분
+        ExpiresIn=200,
     )
     return key, url
 
@@ -278,7 +278,7 @@ def init_image_upload_r2_service(filename, user_id):
             "Bucket": settings.R2_BUCKET,
             "Key": key,
         },
-        ExpiresIn=600,
+        ExpiresIn=200,
     )
 
     return key, url

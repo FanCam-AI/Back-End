@@ -1,5 +1,5 @@
 from sqlalchemy.orm import Session
-from models import User, Result
+from models import User, Result, Subscription
 
 
 def get_user_by_id(db: Session, user_id):
@@ -44,4 +44,6 @@ def get_result_count_by_user_id(db: Session, user_id: int) -> int:
              .filter(Result.user_id == user_id) \
              .count()
 
+def get_subscription_by_user_id(db: Session, user_id: int):
+    return db.query(Subscription).filter(Subscription.user_id == user_id).first()
 

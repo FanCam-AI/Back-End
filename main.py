@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from starlette.middleware.cors import CORSMiddleware
 from starlette.middleware.sessions import SessionMiddleware
 from config import settings
-from domain import auth_router, user_router, share_router, result_router
+from domain import auth_router, user_router, share_router, result_router, subscribe_router
 from starlette.middleware.trustedhost import TrustedHostMiddleware
 app = FastAPI(docs_url=None, redoc_url=None, openapi_url=None)
 
@@ -47,3 +47,4 @@ app.include_router(auth_router)
 app.include_router(user_router)
 app.include_router(share_router)
 app.include_router(result_router)
+app.include_router(subscribe_router)

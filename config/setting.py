@@ -44,6 +44,7 @@ class Settings(BaseSettings):
     PROTECTION_PASSWORD: str
     CPU_RUNPOD_URL: str
     GPU_RUNPOD_URL: str
+    REVENUECAT_WEBHOOK_SECRET: str
 
     # pydantic v2 config
     model_config = SettingsConfigDict(

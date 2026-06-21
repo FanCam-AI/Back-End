@@ -57,14 +57,17 @@ def read_user_me_srvice(db: Session, user_id):
         user = crud.get_user_by_id(db, user_id)
         if not user:
             logger.error(f"user not found, user_id: {user_id}")
-
+        subscription = crud.get_subscription_by_user_id(db, user_id)
         result_count = crud.get_result_count_by_user_id(db, user_id)
+
     except Exception:
         logger.error(f"user not found error")
         raise
 
     return {
         "username": user.username,
+        "user_id": user_id,
+        "subscription_plan":subscription.plan,
         "result_count": result_count,
         "app_version": settings.APP_VERSION,
     }

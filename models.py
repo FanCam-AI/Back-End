@@ -2,6 +2,7 @@ from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, Boolean
 from database import Base
 from sqlalchemy.orm import relationship
 from uuid import uuid4
+from sqlalchemy.sql import func
 
 class Result(Base):
     __tablename__ = "result"
@@ -21,7 +22,6 @@ class Result(Base):
     share_url = Column(String, nullable=True)
 
 
-
 class User(Base):
     __tablename__ = "user"
 
@@ -29,5 +29,37 @@ class User(Base):
     username = Column(String, unique=True, nullable=False)
     email = Column(String, unique=True, nullable=False)
     create_count = Column(Integer, nullable=False)
-    apple_refresh_token = Column(String, nullable=True)  # Apple이 발급한 refresh_token
+    apple_refresh_token = Column(String, nullable=True)
 
+    subscriptions = relationship("Subscription", uselist=False, back_populates="user")
+
+
+class Subscription(Base):
+    __tablename__ = "subscription"
+
+    id = Column(Integer, primary_key=True)
+
+    user_id = Column(
+        Integer,
+        ForeignKey("user.id"),
+        nullable=False,
+        unique=True
+    )
+
+    plan = Column(
+        String(20),
+        nullable=False,
+        default="free"
+    )
+
+    expires_at = Column(
+        DateTime,
+        nullable=True
+    )
+
+
+    user = relationship(
+        "User",
+        uselist=False,
+        back_populates="subscription"
+    )
