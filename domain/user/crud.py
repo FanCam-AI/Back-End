@@ -47,3 +47,7 @@ def get_result_count_by_user_id(db: Session, user_id: int) -> int:
 def get_subscription_by_user_id(db: Session, user_id: int):
     return db.query(Subscription).filter(Subscription.user_id == user_id).first()
 
+def delete_subscription_by_user_id(db: Session, user_id: int):
+    db.query(Subscription)\
+      .filter(Subscription.user_id == user_id)\
+      .delete()

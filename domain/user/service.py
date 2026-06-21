@@ -18,6 +18,7 @@ async def delete_user_account(db: Session, user: User):
 
         results = crud.get_results_by_user(db, user.id)
         crud.delete_results_by_user(db, user.id)
+        crud.delete_subscription_by_user_id(db, user.id)
         crud.delete_user(db, user)
 
         db.commit()
