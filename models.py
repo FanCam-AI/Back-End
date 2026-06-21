@@ -31,7 +31,7 @@ class User(Base):
     create_count = Column(Integer, nullable=False)
     apple_refresh_token = Column(String, nullable=True)
 
-    subscriptions = relationship("Subscription", uselist=False, back_populates="user")
+    subscription = relationship("Subscription", uselist=False, back_populates="user")
 
 
 class Subscription(Base):
