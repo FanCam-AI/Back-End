@@ -3,9 +3,10 @@ from sqlalchemy.orm import Session
 from database import get_db
 from models import User
 from fastapi import HTTPException, Form
+from botocore.exceptions import ClientError
 from sqlalchemy.exc import SQLAlchemyError
-from config import settings
-from domain.token import get_current_user
+from config import settings, logger
+from infra import r2_client
 from . import service, crud
 from datetime import datetime, timezone
 
@@ -47,17 +48,28 @@ async def revenuecat_webhook(
         plan = "free"
         crud.sync_subscription(db, subscription, expires_at, plan)
 
+        try:
+            results = crud.get_results_by_user(db, user.id)
+
+            crud.delete_results_by_user(db, user.id)
+            db.commit()
+        except SQLAlchemyError:
+            db.rollback()
+            raise
+
+        for result in results:
+            file_path = result.file_path
+            try:
+                r2_client.delete_object(
+                    Bucket=settings.R2_BUCKET,
+                    Key=file_path
+                )
+            except ClientError:
+                logger.warning(f"Failed to delete r2 object, key: {file_path}")
+
+
     elif event_type == "RENEWAL":
         plan = "premium"
         crud.sync_subscription(db, subscription, expires_at, plan)
 
     return {"ok": True}
-
-
-
-# 처리 할 이벤트? 첫번째 구독, 두번째 취소, 세번째 재구독, 네번째 환불 정도 애초에 이벤트 최대한 대응하게 if로 다 만들어도 될 듯?
-# 그리고 이제 이거 해서 만약 구독 취소 이벤트나 환불 들어오면 해당 날짜에 맞춰서 Result 잠그고 삭제하는 로직까지
-
-# 레비뉴켓에서 웹훅 받아서 DB 업데이트 하는 거 하고. 이제 그 구독 상태에 따라 결과물 잠그고 삭제 하는 거 추가하고, 또 user/me에서 id도 보내고 또 구독 정보도 보내게
-# 그런데 user/me에서 안하고 새롭게 만들까 생각중 그러면 이제 좀 느려지긴 하지.
-# 아 왜케 아직도 방어기재가 깔려있지 건들기가 싫어 기존 코드를.. 하지만 바꿔야해 변해야해 적용해야해

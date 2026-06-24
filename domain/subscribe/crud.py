@@ -20,3 +20,11 @@ def sync_subscription(db: Session, subscription: Subscription, expires_at, plan)
     return subscription
 
 
+def get_results_by_user(db: Session, user_id):
+    return db.query(Result).filter(Result.user_id == user_id).all()
+
+
+def delete_results_by_user(db: Session, user_id):
+    db.query(Result).filter(
+        Result.user_id == user_id
+    ).delete(synchronize_session=False)
