@@ -4,7 +4,7 @@ from config import settings
 def get_redis_client():
     redis_client = redis.Redis(
         host=settings.REDIS_CLOUD_HOST,
-        port=19268,
+        port=19946,
         decode_responses=True,
         username="default",
         password=settings.REDIS_CLOUD_PASSWORD,
