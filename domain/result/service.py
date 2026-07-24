@@ -307,3 +307,94 @@ def delete_init_files_service(video_key, target_image_keys, bucket_name):
         )
     except ClientError:
         logger.error("Failed to delete initial files")
+
+async def check_ml_server_ready_service(tracking_mode):
+    headers = {
+        "Content-Type": "application/json",
+        "Authorization": f"Bearer {settings.RUNPOD_API_KEY}"
+    }
+
+    if tracking_mode == "normal":
+        try:
+            async with httpx.AsyncClient(timeout=3) as client:
+                response = await client.get(
+                    f'https://{settings.CPU_LOAD_BALANCER_SERVERLESS_URL}.api.runpod.ai/cpu_ready',
+                    headers=headers
+                )
+
+                if response.status_code == 200:
+                    data = response.json()
+                    ready_value = data['status']
+                    if ready_value == "ready":
+                       return {"status": "ready"}
+
+                    if ready_value == "not_ready":
+                        raise RequestError("Not ready")
+
+                else:
+                    raise RequestError("Not ready")
+
+
+        except (ReadTimeout, RequestError):
+            try:
+                async with httpx.AsyncClient(timeout=3) as client:
+                    response = await client.get(
+                        f'https://api.runpod.ai/v2/{settings.CPU_QUEUE_SERVERLESS_URL}/health',
+                        headers=headers
+                    )
+
+                    if response.status_code == 200:
+                        data = response.json()
+                        ready_value = data['status']
+                        if ready_value == "ready":
+                            return {"status": "ready"}
+
+                        elif ready_value == "not_ready":
+                            return {"status": "not_ready"}
+                    else:
+                        return {"status": "not_ready"}
+
+            except (ReadTimeout, RequestError):
+                return {"status": "not_ready"}
+
+
+    elif tracking_mode == "precision":
+        try:
+            async with httpx.AsyncClient(timeout=3) as client:
+                response = await client.get(
+                    f'https://{settings.GPU_LOAD_BALANCER_SERVERLESS_URL}.api.runpod.ai/gpu_ready',
+                    headers=headers
+                )
+
+                if response.status_code == 200:
+                    data = response.json()
+                    status_value = data['status']
+                    if status_value == "ready":
+                        return {"status": "ready"}
+
+                    elif status_value == "not_ready":
+                        raise RequestError("Not ready")
+
+                else:
+                    raise RequestError("Not ready")
+
+        except (ReadTimeout, RequestError):
+            try:
+                async with httpx.AsyncClient(timeout=3) as client:
+                    response = await client.get(
+                        f'https://api.runpod.ai/v2/{settings.GPU_QUEUE_SERVERLESS_URL}/health',
+                        headers=headers
+                    )
+
+                    if response.status_code == 200:
+                        data = response.json()
+                        status_value = data['status']
+                        if status_value == "ready":
+                            return {"status": "ready"}
+                    else:
+                        return {"status": "not_ready"}
+
+            except (ReadTimeout, RequestError):
+                return {"status": "not_ready"}
+
+    return {"status": "not_ready"}
