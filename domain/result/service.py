@@ -97,15 +97,7 @@ async def make_result_service(video_key, target_image_keys, spot_list, video_or_
                     )
 
                     if response.status_code == 200:
-                        data = response.json()
-                        ready_value = data['status']
-                        if ready_value == "ready":
-                            q_serverless_ready = True
-
-                        elif ready_value == "not_ready":
-                            q_serverless_ready = False
-                            delete_init_files_service(video_key, target_image_keys, settings.R2_BUCKET)
-                            return {"status": "busy"}
+                        q_serverless_ready = True
                     else:
                         q_serverless_ready = False
                         delete_init_files_service(video_key, target_image_keys, settings.R2_BUCKET)
@@ -188,10 +180,7 @@ async def make_result_service(video_key, target_image_keys, spot_list, video_or_
                     )
 
                     if response.status_code == 200:
-                        data = response.json()
-                        status_value = data['status']
-                        if status_value == "ready":
-                            q_serverless_ready = True
+                        q_serverless_ready = True
                     else:
                         q_serverless_ready = False
                         delete_init_files_service(video_key, target_image_keys, settings.R2_BUCKET)
@@ -344,13 +333,7 @@ async def check_ml_server_ready_service(tracking_mode):
                     )
 
                     if response.status_code == 200:
-                        data = response.json()
-                        ready_value = data['status']
-                        if ready_value == "ready":
-                            return {"status": "ready"}
-
-                        elif ready_value == "not_ready":
-                            return {"status": "not_ready"}
+                        return {"status": "ready"}
                     else:
                         return {"status": "not_ready"}
 
@@ -387,10 +370,7 @@ async def check_ml_server_ready_service(tracking_mode):
                     )
 
                     if response.status_code == 200:
-                        data = response.json()
-                        status_value = data['status']
-                        if status_value == "ready":
-                            return {"status": "ready"}
+                        return {"status": "ready"}
                     else:
                         return {"status": "not_ready"}
 
