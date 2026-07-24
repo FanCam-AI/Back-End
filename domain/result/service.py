@@ -45,8 +45,9 @@ async def make_result_service(video_key, target_image_keys, spot_list, video_or_
     f = Fernet(settings.FERNET_KEY)
     result_token = await create_result_token(user)
     encrypted_token = f.encrypt(result_token.encode()).decode()
-    ml_server_ready = False
-    ml_serverless_ready = False
+    q_serverless_ready = False
+    lb_serverless_ready = False
+
     headers = {
         "Content-Type": "application/json",
         "Authorization": f"Bearer {settings.RUNPOD_API_KEY}"
@@ -69,7 +70,7 @@ async def make_result_service(video_key, target_image_keys, spot_list, video_or_
         try:
             async with httpx.AsyncClient(timeout=3) as client:
                 response = await client.get(
-                    f'https://{settings.CPU_RUNPOD_URL}.api.runpod.ai/cpu_ready',
+                    f'https://{settings.CPU_LOAD_BALANCER_SERVERLESS_URL}.api.runpod.ai/cpu_ready',
                     headers=headers
                 )
 
@@ -77,21 +78,21 @@ async def make_result_service(video_key, target_image_keys, spot_list, video_or_
                     data = response.json()
                     ready_value = data['status']
                     if ready_value == "ready":
-                        ml_serverless_ready = True
+                        lb_serverless_ready = True
 
                     elif ready_value == "not_ready":
-                        ml_serverless_ready = False
+                        lb_serverless_ready = False
                         raise RequestError("Not ready")
 
                 else:
                     raise RequestError("Not ready")
 
         except (ReadTimeout, RequestError):
-            ml_serverless_ready = False
+            lb_serverless_ready = False
             try:
                 async with httpx.AsyncClient(timeout=3) as client:
                     response = await client.get(
-                        f'https://ml-server.fancamai.com/cpu_ready',
+                        f'https://api.runpod.ai/v2/{settings.CPU_QUEUE_SERVERLESS_URL}/health',
                         headers=headers
                     )
 
@@ -99,14 +100,14 @@ async def make_result_service(video_key, target_image_keys, spot_list, video_or_
                         data = response.json()
                         ready_value = data['status']
                         if ready_value == "ready":
-                            ml_server_ready = True
+                            q_serverless_ready = True
 
                         elif ready_value == "not_ready":
-                            ml_server_ready = False
+                            q_serverless_ready = False
                             delete_init_files_service(video_key, target_image_keys, settings.R2_BUCKET)
                             return {"status": "busy"}
                     else:
-                        ml_server_ready = False
+                        q_serverless_ready = False
                         delete_init_files_service(video_key, target_image_keys, settings.R2_BUCKET)
                         return {"status": "busy"}
 
@@ -114,11 +115,11 @@ async def make_result_service(video_key, target_image_keys, spot_list, video_or_
                 delete_init_files_service(video_key, target_image_keys, settings.R2_BUCKET)
                 return {"status": "busy"}
 
-    if ml_serverless_ready:
+    if lb_serverless_ready:
         try:
             async with httpx.AsyncClient(timeout=5) as client:
                 response = await client.post(
-                    f'https://{settings.CPU_RUNPOD_URL}.api.runpod.ai/process_run',
+                    f'https://{settings.CPU_LOAD_BALANCER_SERVERLESS_URL}.api.runpod.ai/process_run',
                     headers=headers,
                     json=input_data
                 )
@@ -134,11 +135,11 @@ async def make_result_service(video_key, target_image_keys, spot_list, video_or_
             return {"status": "busy"}
 
 
-    elif ml_server_ready:
+    elif q_serverless_ready:
         try:
             async with httpx.AsyncClient(timeout=5) as client:
                 response = await client.post(
-                    f'https://ml-server.fancamai.com/process_run',
+                    f'https://api.runpod.ai/v2/{settings.CPU_QUEUE_SERVERLESS_URL}/run',
                     headers=headers,
                     json=input_data
                 )
@@ -161,7 +162,7 @@ async def make_result_service(video_key, target_image_keys, spot_list, video_or_
         try:
             async with httpx.AsyncClient(timeout=3) as client:
                 response = await client.get(
-                    f'https://{settings.GPU_RUNPOD_URL}.api.runpod.ai/gpu_ready',
+                    f'https://{settings.GPU_LOAD_BALANCER_SERVERLESS_URL}.api.runpod.ai/gpu_ready',
                     headers=headers
                 )
 
@@ -169,10 +170,10 @@ async def make_result_service(video_key, target_image_keys, spot_list, video_or_
                     data = response.json()
                     status_value = data['status']
                     if status_value == "ready":
-                        ml_serverless_ready = True
+                        lb_serverless_ready = True
 
                     if status_value == "not_ready":
-                        ml_serverless_ready = False
+                        lb_serverless_ready = False
                         raise RequestError("Not ready yet")
 
                 else:
@@ -182,7 +183,7 @@ async def make_result_service(video_key, target_image_keys, spot_list, video_or_
             try:
                 async with httpx.AsyncClient(timeout=3) as client:
                     response = await client.get(
-                        f'https://ml-server.fancamai.com/gpu_ready',
+                        f'https://api.runpod.ai/v2/{settings.GPU_QUEUE_SERVERLESS_URL}/health',
                         headers=headers
                     )
 
@@ -190,9 +191,9 @@ async def make_result_service(video_key, target_image_keys, spot_list, video_or_
                         data = response.json()
                         status_value = data['status']
                         if status_value == "ready":
-                            ml_server_ready = True
+                            q_serverless_ready = True
                     else:
-                        ml_server_ready = False
+                        q_serverless_ready = False
                         delete_init_files_service(video_key, target_image_keys, settings.R2_BUCKET)
                         return {"status": "busy"}
 
@@ -200,11 +201,11 @@ async def make_result_service(video_key, target_image_keys, spot_list, video_or_
                 delete_init_files_service(video_key, target_image_keys, settings.R2_BUCKET)
                 return {"status": "busy"}
 
-        if ml_serverless_ready:
+        if lb_serverless_ready:
             try:
                 async with httpx.AsyncClient(timeout=3) as client:
                     response = await client.post(
-                        f'https://{settings.GPU_RUNPOD_URL}.api.runpod.ai/process_run',
+                        f'https://{settings.GPU_LOAD_BALANCER_SERVERLESS_URL}.api.runpod.ai/process_run',
                         headers=headers,
                         json=input_data
                     )
@@ -219,11 +220,11 @@ async def make_result_service(video_key, target_image_keys, spot_list, video_or_
                 delete_init_files_service(video_key, target_image_keys, settings.R2_BUCKET)
                 return {"status": "busy"}
 
-        if ml_server_ready:
+        if q_serverless_ready:
             try:
                 async with httpx.AsyncClient(timeout=3) as client:
                     response = await client.post(
-                        f'https://ml-server.fancamai.com/process_run',
+                        f'https://api.runpod.ai/v2/{settings.GPU_QUEUE_SERVERLESS_URL}/run',
                         headers=headers,
                         json=input_data
                     )

@@ -42,8 +42,10 @@ class Settings(BaseSettings):
     RUNPOD_URL: str
     CLOUD_RUN_URL: str
     PROTECTION_PASSWORD: str
-    CPU_RUNPOD_URL: str
-    GPU_RUNPOD_URL: str
+    CPU_LOAD_BALANCER_SERVERLESS_URL: str
+    GPU_LOAD_BALANCER_SERVERLESS_URL: str
+    CPU_QUEUE_SERVERLESS_URL: str
+    GPU_QUEUE_SERVERLESS_URL: str
     REVENUECAT_WEBHOOK_SECRET: str
 
     # pydantic v2 config
